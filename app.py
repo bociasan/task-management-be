@@ -1,15 +1,26 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from models import db, User, Task
 from forms import RegistrationForm, LoginForm, TaskForm, TaskUpdateForm, PassChangeForm
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
+app.config["SESSION_COOKIE_SECURE"] = 'True'
+
 app.config['WTF_CSRF_ENABLED'] = False
+CORS(app, supports_credentials=True)
+# cors = CORS(app, resource={
+#     r"/*": {
+#         "origins": "*"
+#     }
+# })
+# app.config['CORS_HEADERS'] = 'Content-Type'
 
 migrate = Migrate(app, db)
 
@@ -138,8 +149,18 @@ def add_task():
                     user_id=current_user.id, status=form.status.data)
         db.session.add(task)
         db.session.commit()
-        return jsonify({"message": "Task added successfully"}), 201
+        return jsonify({"message": "Task added successfully", "task_id": task.id}), 201
     return jsonify({"errors": form.errors}), 400
+
+
+@app.route("/task/<int:task_id>/get")
+@login_required
+def get_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        return jsonify({"message": "Unauthorized! (different usserId)"}), 403
+    task_obj = {"id": task.id, "user_id": task.user_id, "name": task.name, "type": task.type, "description": task.description, "status": task.status}
+    return jsonify({"tasks": task_obj}), 200
 
 
 @app.route("/task/<int:task_id>/edit", methods=['PUT'])
@@ -176,6 +197,13 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
     return jsonify({"message": "Task deleted successfully"}), 200
+
+
+@app.route("/reset-db", methods=['GET'])
+def reset_db():
+    db.drop_all()
+    db.create_all()
+    return jsonify({"message": "Database resetted successfully!"}), 200
 
 
 if __name__ == '__main__':
