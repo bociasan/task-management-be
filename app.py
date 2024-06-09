@@ -120,7 +120,7 @@ def get_users():
 @login_required
 def get_user_tasks(user_id):
     user = User.query.get_or_404(user_id)
-    tasks = [{'id': task.id, 'name': task.name, 'type': task.type, 'description': task.description, 'status': task.status} for task in user.tasks]
+    tasks = [{'id': task.id, 'title': task.title, 'type': task.type, 'description': task.description, 'status': task.status} for task in user.tasks]
     return jsonify({'tasks': tasks})
 
 
@@ -128,7 +128,7 @@ def get_user_tasks(user_id):
 @login_required
 def taskboard():
     tasks = Task.query.filter_by(user_id=current_user.id).all()
-    tasks_list = [{"id": task.id, "name": task.name, "type": task.type,
+    tasks_list = [{"id": task.id, "title": task.title, "type": task.type,
                    "description": task.description, "status": task.status
                    } for task in tasks]
     return jsonify({"tasks": tasks_list}), 200
@@ -145,7 +145,7 @@ def logout():
 def add_task():
     form = TaskForm(request.form)
     if form.validate():
-        task = Task(name=form.name.data, type=form.type.data, description=form.description.data,
+        task = Task(title=form.title.data, type=form.type.data, description=form.description.data,
                     user_id=current_user.id, status=form.status.data)
         db.session.add(task)
         db.session.commit()
@@ -159,7 +159,7 @@ def get_task(task_id):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id:
         return jsonify({"message": "Unauthorized! (different usserId)"}), 403
-    task_obj = {"id": task.id, "user_id": task.user_id, "name": task.name, "type": task.type, "description": task.description, "status": task.status}
+    task_obj = {"id": task.id, "user_id": task.user_id, "title": task.title, "type": task.type, "description": task.description, "status": task.status}
     return jsonify({"tasks": task_obj}), 200
 
 
@@ -173,8 +173,8 @@ def edit_task(task_id):
     form = TaskUpdateForm(request.form)
     if form.validate():
         # Update task attributes only if they are present in the request
-        if form.name.data is not None:
-            task.name = form.name.data
+        if form.title.data is not None:
+            task.title = form.title.data
         if form.type.data is not None:
             task.type = form.type.data
         if form.description.data is not None:
