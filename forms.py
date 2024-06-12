@@ -9,7 +9,6 @@ from models import User
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
@@ -30,14 +29,14 @@ class LoginForm(FlaskForm):
 
 
 class TaskForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired()])
+    title = StringField('Title', validators=[DataRequired()])
     type = StringField('Type', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
     status = IntegerField('Status', validators=[NumberRange(min=0, max=3)])
 
 
 class TaskUpdateForm(FlaskForm):
-    name = StringField('Name', validators=[Optional()])
+    title = StringField('Title', validators=[Optional()])
     type = StringField('Type', validators=[Optional()])
     description = StringField('Description', validators=[Optional()])
     status = IntegerField('Status', validators=[Optional(), NumberRange(min=0, max=3)])
