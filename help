@@ -3,3 +3,6 @@
 from app import app, db
 with app.app_context():
     db.create_all()
+
+//Install dependencies:
+pip install flask flask-migrate flask-bcrypt flask-login flask-cors flask-wtf
